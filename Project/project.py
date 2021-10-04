@@ -6,6 +6,7 @@ clockPin = 0
 latchpins = []
 markerPos = [1, 1]
 gameInProgress = False
+shiftStates = [[False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False]]
 
 LEDAssociation = [
         {
@@ -84,7 +85,7 @@ def resetGameState():
 def chooseColor(playerID, newColor):
     if(playerID != 1 or playerID != 0):
         print("Recieved an invalid player ID: " + str(playerID))
-    elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor): 
+    elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor) or matchingArrays(newColor, [True, True, True])): 
         print("The other player is already this color, please select another color")
     else:
         playerColors[playerID] = newColor
@@ -99,6 +100,15 @@ def moveMarkerRelative(x, y):
         elif(marker[i] < 0):
             marker[i] = 2
 
+def refreshDisplay():
+    board = cloneBoard
+    board[markerPos[0]][markerPos[1]] = -1
+    for i, row in enumerate(board):
+        for j, position in enumerate(row):
+            register = (j + (9 * i)) / 8
+            pin = ((9 * i) + j) % 8
+
+
 
 
 #UTIL
@@ -108,4 +118,10 @@ def matchingArrays(A1, A2):
             return True
     return False
 
-
+def cloneBoard():
+    newboard = []
+    for i, thing in enumerate(gameState):
+        newboard[i] = []
+        for j, otherthing in enumerate(thing):
+            newboard[i][j] = otherthing
+    return newboard
