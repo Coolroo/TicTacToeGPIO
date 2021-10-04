@@ -7,6 +7,57 @@ latchpins = []
 markerPos = [1, 1]
 gameInProgress = False
 
+LEDAssociation = [
+        {
+         "red" : [0, 0]
+         "green" : [0, 1]
+         "blue" : [0, 2]
+        },
+        {
+         "red" : [0, 3]
+         "green" : [0, 4]
+         "blue" : [0, 5]
+        },
+        {
+            "red" : [0,6]
+            "green" : [0,7]
+            "blue" : [1,0]
+        },
+        {
+            "red" : [1,1]
+            "green" : [1,2]
+            "blue" : [1,3]
+        },
+        {
+            "red" : [1,4]
+            "green" : [1,5]
+            "blue" : [1,6]
+        },
+        {
+            "red" : [1,7]
+            "green" : [2,0]
+            "blue" : [2,1]
+        },
+        {
+            "red" : [2,2]
+            "green" : [2,3]
+            "blue" : [2,4]
+        },
+        {
+            "red" : [2,5]
+            "green" : [2,6]
+            "blue" : [2,7]
+        },
+        {
+            "red" : [3,0]
+            "green" : [3,1]
+            "blue" : [3,2]
+        }
+
+        
+]
+
+#GPIOGarbage
 def setup():
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(dataPin, GPIO.OUT)
@@ -14,6 +65,10 @@ def setup():
     for pin in latchpins:
         GPIO.setup(pin, GPIO.OUT)
 
+def destroy():
+    GPIO.cleanup()
+
+#Game
 def resetGameState():
     gameInProgress = False
     gameState= [[0,0,0],[0,0,0],[0,0,0]]
@@ -35,8 +90,22 @@ def chooseColor(playerID, newColor):
         playerColors[playerID] = newColor
         print("Successfully changed player " + str(playerID) + "'s color")
 
+def moveMarkerRelative(x, y):
+    marker[0] += x
+    marker[1] += y
+    for i in range(2):
+        if(marker[i] > 2):
+            marker[i] = 0
+        elif(marker[i] < 0):
+            marker[i] = 2
+
+
+
+#UTIL
 def matchingArrays(A1, A2):
     for i, thing in enumerate(A1):
         if A2[i] != thing:
             return True
     return False
+
+
