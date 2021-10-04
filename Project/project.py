@@ -1,6 +1,8 @@
+import math
 gameState = [[0,0,0],[0,0,0],[0,0,0]]
 
 playerColors = [[True,False,False],[False,False,True]]
+markerColor = [True, True, True]
 dataPin = 0
 clockPin = 0
 latchpins = []
@@ -9,54 +11,34 @@ gameInProgress = False
 shiftStates = [[False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False]]
 
 LEDAssociation = [
-        {
-         "red" : [0, 0]
-         "green" : [0, 1]
-         "blue" : [0, 2]
-        },
-        {
-         "red" : [0, 3]
-         "green" : [0, 4]
-         "blue" : [0, 5]
-        },
-        {
-            "red" : [0,6]
-            "green" : [0,7]
-            "blue" : [1,0]
-        },
-        {
-            "red" : [1,1]
-            "green" : [1,2]
-            "blue" : [1,3]
-        },
-        {
-            "red" : [1,4]
-            "green" : [1,5]
-            "blue" : [1,6]
-        },
-        {
-            "red" : [1,7]
-            "green" : [2,0]
-            "blue" : [2,1]
-        },
-        {
-            "red" : [2,2]
-            "green" : [2,3]
-            "blue" : [2,4]
-        },
-        {
-            "red" : [2,5]
-            "green" : [2,6]
-            "blue" : [2,7]
-        },
-        {
-            "red" : [3,0]
-            "green" : [3,1]
-            "blue" : [3,2]
-        }
-
-        
-]
+                    [ #LED 1
+                        [0,0], [0,1], [0,2]
+                    ], 
+                    [ #LED 2
+                        [0,3], [0,4], [0,5]
+                    ],
+                    [ #LED 3
+                        [0,6], [0,7], [1,0]
+                    ],
+                    [ #LED 4
+                        [1,1], [1,2], [1,3]
+                    ],
+                    [ #LED 5
+                        [1,4], [1,5], [1,6]
+                    ],
+                    [ #LED 6
+                        [1,7], [2,0], [2,1]
+                    ],
+                    [ #LED 7
+                        [2,2], [2,3], [2,4]
+                    ],
+                    [ #LED 8
+                        [2,5], [2,6], [2,7]
+                    ],
+                    [ #LED 9
+                        [3,0], [3,1], [3,2]
+                    ]
+                 ]
 
 #GPIOGarbage
 def setup():
@@ -85,7 +67,7 @@ def resetGameState():
 def chooseColor(playerID, newColor):
     if(playerID != 1 or playerID != 0):
         print("Recieved an invalid player ID: " + str(playerID))
-    elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor) or matchingArrays(newColor, [True, True, True])): 
+    elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor) or matchingArrays(newColor, markerColor)): 
         print("The other player is already this color, please select another color")
     else:
         playerColors[playerID] = newColor
@@ -101,12 +83,32 @@ def moveMarkerRelative(x, y):
             marker[i] = 2
 
 def refreshDisplay():
-    board = cloneBoard
+    if not gameInProgress:
+        clearBoard()
+    board = cloneBoard()
     board[markerPos[0]][markerPos[1]] = -1
+    #Generate ShiftStates
     for i, row in enumerate(board):
         for j, position in enumerate(row):
-            register = (j + (9 * i)) / 8
-            pin = ((9 * i) + j) % 8
+            association = LEDAssociation[i][j]
+            if position == 1 or position == 2:
+                for k in range(3):
+                    shiftStates[association[k][0]][association[k][1]] = playerColors[position - 1][k]
+            elif position = -1:
+                for k in range(3):
+                    shiftStates[association[k][0]][association[k][1]] = markerColor[k]
+            else:
+                for k in range(3):
+                    shiftStates[association[k][0]][association[k][1]] = False
+    #Apply Shift States
+    for i, state in enumerate(shiftStates):
+        GPIO.output(latchpins[i], GPIO.LOW)
+        for j, val in enumerate(state):
+            GPIO.output(clockPin, GPIO.LOW)
+            GPIO.output(dataPin, GPIO.HIGH if val else GPIO.LOW)
+            GPIO.output(clockPin, GPIO.HIGH)
+        GPIO.output(latchpins[i], GPIO.HIGH)
+
 
 
 
@@ -125,3 +127,6 @@ def cloneBoard():
         for j, otherthing in enumerate(thing):
             newboard[i][j] = otherthing
     return newboard
+
+def clearBoard():
+    gameState = [[0,0,0], [0,0,0], [0,0,0]]
