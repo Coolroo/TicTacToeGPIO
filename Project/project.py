@@ -1,6 +1,10 @@
 import math
 gameState = [[0,0,0],[0,0,0],[0,0,0]]
 
+MARKER_NUM = -1
+PLAYER1_NUM = 1
+PLAYER2_NUM = 2
+
 playerColors = [[True,False,False],[False,False,True]]
 markerColor = [True, True, True]
 dataPin = 0
@@ -8,7 +12,12 @@ clockPin = 0
 latchpins = []
 markerPos = [1, 1]
 gameInProgress = False
-shiftStates = [[False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False], [False, False, False, False, False, False, False, False]]
+shiftStates = [
+    [False, False, False, False, False, False, False, False], 
+    [False, False, False, False, False, False, False, False], 
+    [False, False, False, False, False, False, False, False], 
+    [False, False, False, False, False, False, False, False]
+]
 
 LEDAssociation = [
                     [ #LED 1
@@ -52,6 +61,8 @@ def destroy():
     GPIO.cleanup()
 
 #Game
+
+#Util
 def resetGameState():
     gameInProgress = False
     gameState= [[0,0,0],[0,0,0],[0,0,0]]
@@ -64,8 +75,8 @@ def resetGameState():
         GPIO.output(pin, GPIO.LOW)
         GPIO.output(pin, GPIO.HIGH)
 	
-def chooseColor(playerID, newColor):
-    if(playerID != 1 or playerID != 0):
+def chooseColor(playerID, newColor): 
+    if(not (playerID == PLAYER2_NUM or playerID == PLAYER1_NUM)):
         print("Recieved an invalid player ID: " + str(playerID))
     elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor) or matchingArrays(newColor, markerColor)): 
         print("The other player is already this color, please select another color")
@@ -73,28 +84,34 @@ def chooseColor(playerID, newColor):
         playerColors[playerID] = newColor
         print("Successfully changed player " + str(playerID) + "'s color")
 
+#Interaction
 def moveMarkerRelative(x, y):
-    marker[0] += x
-    marker[1] += y
+    markerPos[0] += x
+    markerPos[1] += y
     for i in range(2):
-        if(marker[i] > 2):
-            marker[i] = 0
-        elif(marker[i] < 0):
-            marker[i] = 2
+        if(markerPos[i] > 2):
+            markerPos[i] = 0
+        elif(markerPos[i] < 0):
+            markerPos[i] = 2
 
-def refreshDisplay():
+def moveMarkerAbsolute(x = markerPos[0],y = markerPos[1]):
+    markerPos[0] = x % 3
+    markerPos[1] = y % 3
+
+#Display
+def refreshDisplay(showMarker = True):
     if not gameInProgress:
         clearBoard()
     board = cloneBoard()
-    board[markerPos[0]][markerPos[1]] = -1
+    board[markerPos[0]][markerPos[1]] = MARKER_NUM if showMarker else 0
     #Generate ShiftStates
     for i, row in enumerate(board):
         for j, position in enumerate(row):
-            association = LEDAssociation[i][j]
-            if position == 1 or position == 2:
+            association = LEDAssociation[(i * 3) + j]
+            if position == PLAYER1_NUM or position == PLAYER2_NUM:
                 for k in range(3):
-                    shiftStates[association[k][0]][association[k][1]] = playerColors[position - 1][k]
-            elif position = -1:
+                    shiftStates[association[k][0]][association[k][1]] = playerColors[0 if position == PLAYER1_NUM else 1][k]
+            elif position == MARKER_NUM:
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = markerColor[k]
             else:
@@ -109,7 +126,8 @@ def refreshDisplay():
             GPIO.output(clockPin, GPIO.HIGH)
         GPIO.output(latchpins[i], GPIO.HIGH)
 
-
+def clearBoard():
+    gameState = [[0,0,0], [0,0,0], [0,0,0]]
 
 
 
@@ -128,5 +146,3 @@ def cloneBoard():
             newboard[i][j] = otherthing
     return newboard
 
-def clearBoard():
-    gameState = [[0,0,0], [0,0,0], [0,0,0]]
