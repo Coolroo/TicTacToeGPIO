@@ -1,6 +1,6 @@
 import math
 from lirc import RawConnection
-import GPIO
+import RPi.GPIO as GPIO
 gameState = [[0,0,0],[0,0,0],[0,0,0]]
 
 MARKER_NUM = -1
@@ -11,9 +11,9 @@ CONSOLE_DEBUG = True
 
 playerColors = [[True,False,False],[False,False,True]]
 markerColor = [True, True, True]
-dataPin = 0
-clockPin = 0
-latchpins = [13]
+dataPin = 11
+clockPin = 15
+latchpins = [13, 19, 21, 23]
 markerPos = [1, 1]
 gameInProgress = False
 turnState = True
@@ -230,9 +230,10 @@ def cloneBoard():
             newboard[i].append(otherthing)
     return newboard
 
-
+setup()
 while True:
     try:
         processInput()
     except KeyboardInterrupt:
         break
+destroy()
