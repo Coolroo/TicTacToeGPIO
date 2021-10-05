@@ -1,7 +1,6 @@
 import math
 from lirc import RawConnection
 import RPi.GPIO as GPIO
-gameState = [[0,0,0],[0,0,0],[0,0,0]]
 
 MARKER_NUM = -1
 PLAYER1_NUM = 1
@@ -9,23 +8,9 @@ PLAYER2_NUM = 2
 
 CONSOLE_DEBUG = True
 
-playerColors = [[True,False,False],[False,False,True]]
-markerColor = [True, True, True]
-dataPin = 11
-clockPin = 15
+gameState = [[0,0,0],[0,0,0],[0,0,0]]
 latchpins = [13, 19, 21, 23]
 markerPos = [1, 1]
-gameInProgress = False
-turnState = True
-choosingColor = False
-connection = RawConnection()
-shiftStates = [
-    [False, False, False, False, False, False, False, False], 
-    [False, False, False, False, False, False, False, False], 
-    [False, False, False, False, False, False, False, False], 
-    [False, False, False, False, False, False, False, False]
-]
-
 LEDAssociation = [
                     [ #LED 1
                         [0,0], [0,1], [0,2]
@@ -55,6 +40,24 @@ LEDAssociation = [
                         [3,0], [3,1], [3,2]
                     ]
                  ]
+
+playerColors = [[True,False,False],[False,False,True]]
+markerColor = [True, True, True]
+shiftStates = [
+    [False, False, False, False, False, False, False, False], 
+    [False, False, False, False, False, False, False, False], 
+    [False, False, False, False, False, False, False, False], 
+    [False, False, False, False, False, False, False, False]
+]
+
+gameInProgress = False
+turnState = True
+choosingColor = False
+
+dataPin = 11
+clockPin = 15
+
+connection = RawConnection()
 
 #GPIOGarbage
 def setup():
@@ -101,11 +104,8 @@ def chooseColor(playerID, newColor):
 def moveMarkerRelative(x, y):
     markerPos[0] += x
     markerPos[1] += y
-    for i in range(2):
-        if(markerPos[i] > 2):
-            markerPos[i] = 0
-        elif(markerPos[i] < 0):
-            markerPos[i] = 2
+    markerpos[0] %= 3
+    markerpos[1] %= 3
 
 def setMarkerPos(x = markerPos[0],y = markerPos[1]):
     markerPos[0] = x % 3
