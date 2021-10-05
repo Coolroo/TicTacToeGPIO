@@ -1,5 +1,6 @@
 import math
 from lirc import RawConnection
+import GPIO
 gameState = [[0,0,0],[0,0,0],[0,0,0]]
 
 MARKER_NUM = -1
