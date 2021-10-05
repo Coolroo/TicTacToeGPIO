@@ -118,7 +118,7 @@ def refreshDisplay(showMarker = True):
     board[markerPos[0]][markerPos[1]] = MARKER_NUM if showMarker else 0
     #Generate ShiftStates
     if CONSOLE_DEBUG:
-        print("The game state is " + board, sep=", ", end="\n")
+        print("The game state is " + str(board))
     for i, row in enumerate(board):
         for j, position in enumerate(row):
             association = LEDAssociation[(i * 3) + j]
