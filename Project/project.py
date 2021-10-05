@@ -224,9 +224,9 @@ def matchingArrays(A1, A2):
 def cloneBoard():
     newboard = []
     for i, thing in enumerate(gameState):
-        newboard[i] = []
+        newboard.append([])
         for j, otherthing in enumerate(thing):
-            newboard[i][j] = otherthing
+            newboard[i].append(otherthing)
     return newboard
 
 
