@@ -8,6 +8,7 @@ PLAYER2_NUM = 2
 
 CONSOLE_DEBUG = True
 
+
 gameState = [[0,0,0],[0,0,0],[0,0,0]]
 latchpins = [13, 19, 21, 23]
 markerPos = [1, 1]
@@ -104,8 +105,8 @@ def chooseColor(playerID, newColor):
 def moveMarkerRelative(x, y):
     markerPos[0] += x
     markerPos[1] += y
-    markerpos[0] %= 3
-    markerpos[1] %= 3
+    markerPos[0] %= 3
+    markerPos[1] %= 3
 
 def setMarkerPos(x = markerPos[0],y = markerPos[1]):
     markerPos[0] = x % 3
@@ -133,13 +134,7 @@ def refreshDisplay(showMarker = True):
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = False
     #Apply Shift States
-    for i, state in enumerate(shiftStates):
-        GPIO.output(latchpins[i], GPIO.LOW)
-        for high in state:
-            GPIO.output(clockPin, GPIO.LOW)
-            GPIO.output(dataPin, GPIO.HIGH if high else GPIO.LOW)
-            GPIO.output(clockPin, GPIO.HIGH)
-        GPIO.output(latchpins[i], GPIO.HIGH)
+    shiftOut(shiftStates)
 
 def clearBoard():
     gameState = [[0,0,0], [0,0,0], [0,0,0]]
@@ -207,14 +202,76 @@ def processInput():
         elif command == "KEY_9":
             setMarkerPos(2, 2)
         elif command == "KEY_NUMERIC_STAR":
-            return #TEMP
+            print("Selecting color for player 1")
+            selectColor(0)
         elif command == "KEY_NUMERIC_POUND":
-            return
+            print("Selecting color for player 2")
+            selectColor(1)
         refreshDisplay()
 
+def selectColor(playerID):
+    colorSelected = False
+    currcolor = playerColors[playerID]
+        
+    while not colorSelected:
+        changeColors = True
+        try:
+            keypress = connection.readline(.0001)
+        except:
+            keypress=""
+    
+        if(keypress != "" and keypress is not None):
+            data = keypress.split()
+            repeats = data[1]
+            command = data[2]
+
+            if(repeats != "00"):
+                continue
+
+        if command == "KEY_1":
+            currcolor = [False, False, True]
+        elif command == "KEY_2":
+            currcolor = [False, True, False]
+        elif command == "KEY_3":
+            currcolor = [True, False, False]
+        elif command == "KEY_4":
+            currcolor = [False, True, True]
+        elif command == "KEY_5":
+            currcolor = [True, True, False]
+        elif command == "KEY_6":
+            currcolor = [True, False, True]
+        elif command == "KEY_7":
+            currcolor = [True, True, True]
+        else:
+            changeColors = False
+        
+        if command == "KEY_OK":
+            print("Changing player " + str(playerID) + "'s Color to " + str(currcolor))
+            chooseColor(playerID, currcolor)
+            colorSelected = True
+        
+        
+        if changeColors and not (matchingArrays(playerColors[0 if playerID == 1 else 1], currcolor) or matchingArrays(currcolor, markerColor)):
+            colorStates = []
+            for i, state in enumerate(shiftStates):
+                colorStates.append([])
+                for j in range(8):
+                    colorStates.append(currcolor[(i * 8) + j % 3])
+
+            shiftOut(colorStates)
 
 
 #UTIL
+
+def shiftOut(states):
+    for i, state in enumerate(states):
+            GPIO.output(latchpins[i], GPIO.LOW)
+            for high in state:
+                GPIO.output(clockPin, GPIO.LOW)
+                GPIO.output(dataPin, GPIO.HIGH if high else GPIO.LOW)
+                GPIO.output(clockPin, GPIO.HIGH)
+            GPIO.output(latchpins[i], GPIO.HIGH)
+
 def matchingArrays(A1, A2):
     for i, thing in enumerate(A1):
         if A2[i] != thing:
