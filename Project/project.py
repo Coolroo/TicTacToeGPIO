@@ -211,7 +211,6 @@ def processInput():
         elif command == "KEY_NUMERIC_POUND":
             return
         refreshDisplay()
-        processInput()
 
 
 
