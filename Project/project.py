@@ -230,4 +230,8 @@ def cloneBoard():
     return newboard
 
 
-processInput()
+while True:
+    try:
+        processInput()
+    except KeyboardInterrupt:
+        break
