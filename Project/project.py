@@ -1,17 +1,23 @@
 import math
+from lirc import RawConnection
 gameState = [[0,0,0],[0,0,0],[0,0,0]]
 
 MARKER_NUM = -1
 PLAYER1_NUM = 1
 PLAYER2_NUM = 2
 
+CONSOLE_DEBUG = True
+
 playerColors = [[True,False,False],[False,False,True]]
 markerColor = [True, True, True]
 dataPin = 0
 clockPin = 0
-latchpins = []
+latchpins = [13]
 markerPos = [1, 1]
 gameInProgress = False
+turnState = True
+choosingColor = False
+connection = RawConnection()
 shiftStates = [
     [False, False, False, False, False, False, False, False], 
     [False, False, False, False, False, False, False, False], 
@@ -67,10 +73,16 @@ def resetGameState():
     gameInProgress = False
     gameState= [[0,0,0],[0,0,0],[0,0,0]]
     GPIO.output(dataPin, GPIO.LOW)
+
+    for state in shiftStates:
+        for i in range(8):
+            state[i] = False
+
     for i in range(0,8):
         GPIO.output(clockPin, GPIO.LOW)
         GPIO.output(clockPin, GPIO.HIGH)
     GPIO.output(clockPin, GPIO.LOW)
+
     for pin in latchpins:
         GPIO.output(pin, GPIO.LOW)
         GPIO.output(pin, GPIO.HIGH)
@@ -94,7 +106,7 @@ def moveMarkerRelative(x, y):
         elif(markerPos[i] < 0):
             markerPos[i] = 2
 
-def moveMarkerAbsolute(x = markerPos[0],y = markerPos[1]):
+def setMarkerPos(x = markerPos[0],y = markerPos[1]):
     markerPos[0] = x % 3
     markerPos[1] = y % 3
 
@@ -105,6 +117,8 @@ def refreshDisplay(showMarker = True):
     board = cloneBoard()
     board[markerPos[0]][markerPos[1]] = MARKER_NUM if showMarker else 0
     #Generate ShiftStates
+    if CONSOLE_DEBUG:
+        print("The game state is " + board)
     for i, row in enumerate(board):
         for j, position in enumerate(row):
             association = LEDAssociation[(i * 3) + j]
@@ -120,14 +134,83 @@ def refreshDisplay(showMarker = True):
     #Apply Shift States
     for i, state in enumerate(shiftStates):
         GPIO.output(latchpins[i], GPIO.LOW)
-        for j, val in enumerate(state):
+        for high in state:
             GPIO.output(clockPin, GPIO.LOW)
-            GPIO.output(dataPin, GPIO.HIGH if val else GPIO.LOW)
+            GPIO.output(dataPin, GPIO.HIGH if high else GPIO.LOW)
             GPIO.output(clockPin, GPIO.HIGH)
         GPIO.output(latchpins[i], GPIO.HIGH)
 
 def clearBoard():
     gameState = [[0,0,0], [0,0,0], [0,0,0]]
+
+def startGame():
+    resetGameState()
+    
+def processInput():
+
+    try:
+        keypress = connection.readline(.0001)
+    except:
+        keypress=""
+    
+    if(keypress != "" and keypress is not None):
+        data = keypress.split()
+        repeats = data[1]
+        command = data[2]
+
+        if(repeats != "00"):
+            return
+        ''' KEY_UP                   0x629D
+          KEY_DOWN                 0xA857
+          KEY_LEFT                 0x22DD
+          KEY_RIGHT                0xC23D
+          KEY_OK                   0x02FD
+          KEY_1                    0x6897
+          KEY_2                    0x9867
+          KEY_3                    0xB04F
+          KEY_4                    0x30CF
+          KEY_5                    0x18E7
+          KEY_6                    0x7A85
+          KEY_7                    0x10EF
+          KEY_8                    0x38C7
+          KEY_9                    0x5AA5
+          KEY_0                    0x4AB5
+          KEY_NUMERIC_STAR         0x42BD
+          KEY_NUMERIC_POUND        0x52AD'''
+        if command == "KEY_UP":
+            moveMarkerRelative(0, 1)
+        elif command == "KEY_DOWN":
+            moveMarkerRelative(0, -1)
+        elif command == "KEY_RIGHT":
+            moveMarkerRelative(1, 0)
+        elif command == "KEY_LEFT":
+            moveMarkerRelative(-1, 0)
+        elif command == "KEY_OK":
+            return #TEMP
+        elif command == "KEY_1":
+            setMarkerPos(0, 0)
+        elif command == "KEY_2":
+            setMarkerPos(0, 1)
+        elif command == "KEY_3":
+            setMarkerPos(0, 2)
+        elif command == "KEY_4":
+            setMarkerPos(1, 0)
+        elif command == "KEY_5":
+            setMarkerPos(1, 1)
+        elif command == "KEY_6":
+            setMarkerPos(1, 2)
+        elif command == "KEY_7":
+            setMarkerPos(2, 0)
+        elif command == "KEY_8":
+            setMarkerPos(2, 1)
+        elif command == "KEY_9":
+            setMarkerPos(2, 2)
+        elif command == "KEY_NUMERIC_STAR":
+            return #TEMP
+        elif command == "KEY_NUMERIC_POUND":
+            return
+        refreshDisplay()
+        processInput()
 
 
 
@@ -146,3 +229,5 @@ def cloneBoard():
             newboard[i][j] = otherthing
     return newboard
 
+
+processInput()
