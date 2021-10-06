@@ -110,6 +110,7 @@ def clearBoard():
 
 def startGame():
     global prevStartState
+    global gameInProgress
     resetGameState()
     turnState = not prevStartState
     prevStartState = turnState
