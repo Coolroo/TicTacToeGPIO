@@ -119,6 +119,7 @@ def startGame():
             processInput()
         except KeyboardInterrupt:
             break
+    resetGameState()
 
 def checkForWin():
     #Check Rows
@@ -153,7 +154,6 @@ def won(playerNum):
     global gameInProgress
     print("Player " + str(playerNum) + " won!")
     gameInProgress = False
-    return
             
 def matchingRows(list):
     if(len(list) == 0):
