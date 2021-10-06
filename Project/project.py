@@ -178,9 +178,9 @@ def processInput():
         elif command == "KEY_DOWN":
             moveMarkerRelative(0, -1)
         elif command == "KEY_RIGHT":
-            moveMarkerRelative(1, 0)
-        elif command == "KEY_LEFT":
             moveMarkerRelative(-1, 0)
+        elif command == "KEY_LEFT":
+            moveMarkerRelative(1, 0)
         elif command == "KEY_OK":
             return #TEMP
         elif command == "KEY_1":
@@ -228,37 +228,37 @@ def selectColor(playerID):
             if(repeats != "00"):
                 continue
 
-        if command == "KEY_1":
-            currcolor = [False, False, True]
-        elif command == "KEY_2":
-            currcolor = [False, True, False]
-        elif command == "KEY_3":
-            currcolor = [True, False, False]
-        elif command == "KEY_4":
-            currcolor = [False, True, True]
-        elif command == "KEY_5":
-            currcolor = [True, True, False]
-        elif command == "KEY_6":
-            currcolor = [True, False, True]
-        elif command == "KEY_8":
-            currcolor = [True, True, True]
-        else:
-            changeColors = False
-        
-        if command == "KEY_OK":
-            print("Changing player " + str(playerID) + "'s Color to " + str(currcolor))
-            chooseColor(playerID, currcolor)
-            colorSelected = True
-        
-        
-        if changeColors and not (matchingArrays(playerColors[0 if playerID == 1 else 1], currcolor) or matchingArrays(currcolor, markerColor)):
-            colorStates = []
-            for i, state in enumerate(shiftStates):
-                colorStates.append([])
-                for j in range(8):
-                    colorStates.append(currcolor[(i * 8) + j % 3])
+            if command == "KEY_1":
+                currcolor = [False, False, True]
+            elif command == "KEY_2":
+                currcolor = [False, True, False]
+            elif command == "KEY_3":
+                currcolor = [True, False, False]
+            elif command == "KEY_4":
+                currcolor = [False, True, True]
+            elif command == "KEY_5":
+                currcolor = [True, True, False]
+            elif command == "KEY_6":
+                currcolor = [True, False, True]
+            elif command == "KEY_8":
+                currcolor = [True, True, True]
+            else:
+                changeColors = False
+            
+            if command == "KEY_OK":
+                print("Changing player " + str(playerID) + "'s Color to " + str(currcolor))
+                chooseColor(playerID, currcolor)
+                colorSelected = True
+            
+            
+            if changeColors and not (matchingArrays(playerColors[0 if playerID == 1 else 1], currcolor) or matchingArrays(currcolor, markerColor)):
+                colorStates = []
+                for i, state in enumerate(shiftStates):
+                    colorStates.append([])
+                    for j in range(8):
+                        colorStates.append(currcolor[(i * 8) + j % 3])
 
-            shiftOut(colorStates)
+                shiftOut(colorStates)
 
 
 #UTIL
