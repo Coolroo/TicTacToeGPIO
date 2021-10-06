@@ -174,13 +174,13 @@ def processInput():
           KEY_NUMERIC_STAR         0x42BD
           KEY_NUMERIC_POUND        0x52AD'''
         if command == "KEY_UP":
-            moveMarkerRelative(0, 1)
-        elif command == "KEY_DOWN":
             moveMarkerRelative(0, -1)
+        elif command == "KEY_DOWN":
+            moveMarkerRelative(0, 1)
         elif command == "KEY_RIGHT":
-            moveMarkerRelative(-1, 0)
-        elif command == "KEY_LEFT":
             moveMarkerRelative(1, 0)
+        elif command == "KEY_LEFT":
+            moveMarkerRelative(-1, 0)
         elif command == "KEY_OK":
             return #TEMP
         elif command == "KEY_1":
