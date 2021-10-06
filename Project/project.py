@@ -240,7 +240,7 @@ def selectColor(playerID):
             currcolor = [True, True, False]
         elif command == "KEY_6":
             currcolor = [True, False, True]
-        elif command == "KEY_7":
+        elif command == "KEY_8":
             currcolor = [True, True, True]
         else:
             changeColors = False
