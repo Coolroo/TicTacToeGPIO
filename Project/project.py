@@ -2,6 +2,7 @@ import math
 from lirc import RawConnection
 import RPi.GPIO as GPIO
 
+BLANK_NUM = 0
 MARKER_NUM = -1
 PLAYER1_NUM = 1
 PLAYER2_NUM = 2
@@ -9,7 +10,7 @@ PLAYER2_NUM = 2
 CONSOLE_DEBUG = True
 
 
-gameState = [[0,0,0],[0,0,0],[0,0,0]]
+gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
 latchpins = [13, 19, 21, 23]
 markerPos = [1, 1]
 LEDAssociation = [
@@ -53,6 +54,7 @@ shiftStates = [
 
 gameInProgress = False
 turnState = True
+prevStartState = True
 choosingColor = False
 
 dataPin = 11
@@ -75,8 +77,10 @@ def destroy():
 
 #Util
 def resetGameState():
+    global gameInProgress
+    global gameState
     gameInProgress = False
-    gameState= [[0,0,0],[0,0,0],[0,0,0]]
+    gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
     GPIO.output(dataPin, GPIO.LOW)
 
     for state in shiftStates:
@@ -100,6 +104,65 @@ def chooseColor(playerID, newColor):
     else:
         playerColors[0 if playerID == PLAYER1_NUM else 1] = newColor
         print("Successfully changed player " + str(playerID) + "'s color")
+
+def clearBoard():
+    gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
+
+def startGame():
+    global prevStartState
+    resetGameState()
+    turnState = not prevStartState
+    prevStartState = turnState
+    gameInProgress = True
+    while gameInProgress:
+        try:
+            processInput()
+        except KeyboardInterrupt:
+            break
+
+def checkForWin():
+    #Check Rows
+    hasWon = False
+    for row in gameState:
+        if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
+            won(row[0])
+            return
+
+    #Check Columns
+    cols = [[], [], []]
+    for i, row in enumerate(gameState):
+        for j, col in enumerate(row):
+            cols[j][i] = col
+    for row in cols:
+        if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
+            won(row[0])
+            return
+
+    #Check Diagonals
+    diag = [[], []]
+    for i in range(3):
+            diag[0][i] = gameState[i][i]
+            diag[1][i] = gameState[i][2-i]
+    for row in cols:
+        if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
+            won(row[0])
+            return
+
+
+def won(playerNum):
+    global gameInProgress
+    print("Player " + str(playerNum) + " won!")
+    gameInProgress = False
+    return
+            
+def matchingRows(list):
+    if(len(list) == 0):
+        return False
+    firstElem = list[0]
+    for thing in list:
+        if thing != firstElem:
+            return False
+    return True
 
 #Interaction
 def moveMarkerRelative(x, y):
@@ -135,15 +198,9 @@ def refreshDisplay(showMarker = True):
                     shiftStates[association[k][0]][association[k][1]] = False
     #Apply Shift States
     shiftOut(shiftStates)
-
-def clearBoard():
-    gameState = [[0,0,0], [0,0,0], [0,0,0]]
-
-def startGame():
-    resetGameState()
     
+#INPUTS
 def processInput():
-
     try:
         keypress = connection.readline(.0001)
     except:
@@ -182,7 +239,7 @@ def processInput():
         elif command == "KEY_LEFT":
             moveMarkerRelative(-1, 0)
         elif command == "KEY_OK":
-            return #TEMP
+            makeMove()
         elif command == "KEY_1":
             setMarkerPos(0, 0)
         elif command == "KEY_2":
@@ -208,6 +265,14 @@ def processInput():
             print("Selecting color for player 2")
             selectColor(2)
         refreshDisplay()
+
+def makeMove():
+    global turnState
+    if gameState[markerPos[0]][markerPos[1]] == BLANK_NUM:
+        gameState[markerPos[0]][markerPos[1]] = PLAYER1_NUM if turnState else PLAYER2_NUM
+        turnState = not turnState
+        checkForWin()
+
 
 def selectColor(playerID):
     colorSelected = False
@@ -256,7 +321,7 @@ def selectColor(playerID):
                 for i, state in enumerate(shiftStates):
                     colorStates.append([])
                     for j in range(8):
-                        colorStates.append(currcolor[(i * 8) + j % 3])
+                        colorStates.append(currcolor[((i * 8) + j) % 3])
 
                 shiftOut(colorStates)
 
@@ -282,14 +347,9 @@ def cloneBoard():
     newboard = []
     for i, thing in enumerate(gameState):
         newboard.append([])
-        for j, otherthing in enumerate(thing):
+        for otherthing in thing:
             newboard[i].append(otherthing)
     return newboard
 
 setup()
-while True:
-    try:
-        processInput()
-    except KeyboardInterrupt:
-        break
-destroy()
+startGame()
