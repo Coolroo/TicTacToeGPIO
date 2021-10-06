@@ -98,7 +98,7 @@ def chooseColor(playerID, newColor):
     elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor) or matchingArrays(newColor, markerColor)): 
         print("The other player is already this color, please select another color")
     else:
-        playerColors[playerID] = newColor
+        playerColors[0 if playerID == PLAYER1_NUM else 1] = newColor
         print("Successfully changed player " + str(playerID) + "'s color")
 
 #Interaction
@@ -203,10 +203,10 @@ def processInput():
             setMarkerPos(2, 2)
         elif command == "KEY_NUMERIC_STAR":
             print("Selecting color for player 1")
-            selectColor(0)
+            selectColor(1)
         elif command == "KEY_NUMERIC_POUND":
             print("Selecting color for player 2")
-            selectColor(1)
+            selectColor(2)
         refreshDisplay()
 
 def selectColor(playerID):
