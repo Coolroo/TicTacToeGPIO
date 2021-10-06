@@ -2,14 +2,16 @@ import math
 from lirc import RawConnection
 import RPi.GPIO as GPIO
 
+#CONSTANTS
 BLANK_NUM = 0
 MARKER_NUM = -1
 PLAYER1_NUM = 1
 PLAYER2_NUM = 2
 
+#DEBUG
 CONSOLE_DEBUG = True
 
-
+#INT Array Variables
 gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
 latchpins = [13, 19, 21, 23]
 markerPos = [1, 1]
@@ -43,8 +45,11 @@ LEDAssociation = [
                     ]
                  ]
 
+#Boolean Array Variables
+
+#Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
 playerColors = [[True,False,False],[False,False,True]]
-markerColor = [True, True, True]
+markerColor = [True, True, False]
 shiftStates = [
     [False, False, False, False, False, False, False, False], 
     [False, False, False, False, False, False, False, False], 
@@ -52,17 +57,21 @@ shiftStates = [
     [False, False, False, False, False, False, False, False]
 ]
 
+#INT Variables
+dataPin = 11
+clockPin = 15
+
+#Boolean Variables
 gameInProgress = False
 turnState = True
 prevStartState = True
 choosingColor = False
 
-dataPin = 11
-clockPin = 15
-
+#OBJ Variables
 connection = RawConnection()
 
 #GPIOGarbage
+#Setup for the GPIO Board
 def setup():
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(dataPin, GPIO.OUT)
@@ -70,12 +79,15 @@ def setup():
     for pin in latchpins:
         GPIO.setup(pin, GPIO.OUT)
 
+#Cleans up the GPIO board
 def destroy():
     GPIO.cleanup()
 
 #Game
 
 #Util
+
+#Resets the game to the state it was in before the game started
 def resetGameState():
     global gameInProgress
     global gameState
@@ -96,6 +108,7 @@ def resetGameState():
         GPIO.output(pin, GPIO.LOW)
         GPIO.output(pin, GPIO.HIGH)
 	
+#Sets the color of a given player, as long as it is not the marker color and not the other player's color
 def chooseColor(playerID, newColor): 
     if(not (playerID == PLAYER2_NUM or playerID == PLAYER1_NUM)):
         print("Recieved an invalid player ID: " + str(playerID))
@@ -105,23 +118,12 @@ def chooseColor(playerID, newColor):
         playerColors[0 if playerID == PLAYER1_NUM else 1] = newColor
         print("Successfully changed player " + str(playerID) + "'s color")
 
+#Clears the board
 def clearBoard():
+    global gameState
     gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
 
-def startGame():
-    global prevStartState
-    global gameInProgress
-    resetGameState()
-    turnState = not prevStartState
-    prevStartState = turnState
-    gameInProgress = True
-    while gameInProgress:
-        try:
-            processInput()
-        except KeyboardInterrupt:
-            break
-    resetGameState()
-
+#Checks to see if any player has won
 def checkForWin():
     #Check Rows
     for row in gameState:
@@ -147,53 +149,80 @@ def checkForWin():
     for row in diag:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
-            return
 
-
+#Win as a given player
 def won(playerNum):
     global gameInProgress
     print("Player " + str(playerNum) + " won!")
     gameInProgress = False
-            
-def matchingRows(list):
-    if(len(list) == 0):
-        return False
-    firstElem = list[0]
-    for thing in list:
-        if thing != firstElem:
-            return False
-    return True
+        
+
+#Gameplay
+#Starts the game
+def startGame():
+    global prevStartState
+    global gameInProgress
+    global turnState
+    resetGameState()
+    turnState = not prevStartState
+    prevStartState = turnState
+    gameInProgress = True
+    while gameInProgress:
+        try:
+            processInput()
+        except KeyboardInterrupt:
+            break
+    resetGameState()
+
+#Makes a move based on the current player and the marker position
+def makeMove():
+    global turnState
+    if gameState[markerPos[0]][markerPos[1]] == BLANK_NUM:
+        gameState[markerPos[0]][markerPos[1]] = PLAYER1_NUM if turnState else PLAYER2_NUM
+        turnState = not turnState
+        checkForWin()
+    else:
+        print("Cannot move here as player " + str(gameState[markerPos[0]][markerPos[1]]) + " already has this space marked")
+
 
 #Interaction
+
+#Moves the marker based on its relative position
 def moveMarkerRelative(x, y):
     markerPos[0] += x
     markerPos[1] += y
     markerPos[0] %= 3
     markerPos[1] %= 3
 
+#Sets the marker's absolute position
 def setMarkerPos(x = markerPos[0],y = markerPos[1]):
     markerPos[0] = x % 3
     markerPos[1] = y % 3
 
 #Display
+
+#Refreshes all of the shift states based on the board and marker position and shifts them to their respective registers
 def refreshDisplay(showMarker = True):
+    #Clear the board if the game is over
     if not gameInProgress:
         clearBoard()
+    #Clone the board so we can modify it based on the marker position
     board = cloneBoard()
+    #Add the marker to the board
     board[markerPos[0]][markerPos[1]] = MARKER_NUM if showMarker else 0
-    #Generate ShiftStates
     if CONSOLE_DEBUG:
         print("The game state is " + str(board))
-    for i, row in enumerate(board):
-        for j, position in enumerate(row):
-            association = LEDAssociation[(i * 3) + j]
-            if position == PLAYER1_NUM or position == PLAYER2_NUM:
+    #Generate ShiftStates
+    for i, row in enumerate(board): #Get all the rows of the board
+        for j, position in enumerate(row):  #Get all items in the row
+            association = LEDAssociation[(i * 3) + j] #Get the association of the current position
+            if position == PLAYER1_NUM or position == PLAYER2_NUM: #If this is a player number, set the LED color to this player's color
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = playerColors[0 if position == PLAYER1_NUM else 1][k]
-            elif position == MARKER_NUM:
+            elif position == MARKER_NUM: #If this is the marker number, set the LED color to the marker color
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = markerColor[k]
-            else:
+            else: #Else turn the LED off
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = False
     #Apply Shift States
@@ -202,17 +231,24 @@ def refreshDisplay(showMarker = True):
 #INPUTS
 def processInput():
     try:
+        #Get an input
         keypress = connection.readline(.0001)
+    except KeyboardInterrupt:
+        #We have to rethrow this exception so this doesn't consume it
+        raise KeyboardInterrupt
     except:
+        #If we run into any other errors, just make keypress nothing
         keypress=""
     
+    #Make sure we are using a valid key
     if(keypress != "" and keypress is not None):
-        data = keypress.split()
-        repeats = data[1]
-        command = data[2]
+        data = keypress.split() #Split the input up
+        repeats = data[1] #This is how long the button has been held
+        command = data[2] #This is what the input command was
 
-        if(repeats != "00"):
+        if(repeats != "00"): #If the button is being held, just ignore it
             return
+
         ''' KEY_UP                   0x629D
           KEY_DOWN                 0xA857
           KEY_LEFT                 0x22DD
@@ -264,24 +300,22 @@ def processInput():
         elif command == "KEY_NUMERIC_POUND":
             print("Selecting color for player 2")
             selectColor(2)
+        #Refresh the display after an input
         refreshDisplay()
 
-def makeMove():
-    global turnState
-    if gameState[markerPos[0]][markerPos[1]] == BLANK_NUM:
-        gameState[markerPos[0]][markerPos[1]] = PLAYER1_NUM if turnState else PLAYER2_NUM
-        turnState = not turnState
-        checkForWin()
-
-
+#A menu for players to select their color
 def selectColor(playerID):
     colorSelected = False
     currcolor = playerColors[playerID]
         
+    #While the player is selecting their color
     while not colorSelected:
         changeColors = True
+        #This acts the same as ProcessInput()
         try:
             keypress = connection.readline(.0001)
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
         except:
             keypress=""
     
@@ -292,7 +326,7 @@ def selectColor(playerID):
 
             if(repeats != "00"):
                 continue
-
+            #Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
             if command == "KEY_1":
                 currcolor = [False, False, True]
             elif command == "KEY_2":
@@ -310,39 +344,43 @@ def selectColor(playerID):
             else:
                 changeColors = False
             
+            #If we are selecting the current color
             if command == "KEY_OK":
                 print("Changing player " + str(playerID) + "'s Color to " + str(currcolor))
                 chooseColor(playerID, currcolor)
                 colorSelected = True
             
-            
-            if changeColors and not (matchingArrays(playerColors[0 if playerID == 1 else 1], currcolor) or matchingArrays(currcolor, markerColor)):
+            #Shift out the color changes as the entire board for easily viewing the selected color
+            if changeColors and not (matchingArrays(playerColors[0 if playerID == PLAYER1_NUM else 1], currcolor) or matchingArrays(currcolor, markerColor)):
                 colorStates = []
                 for i, state in enumerate(shiftStates):
                     colorStates.append([])
                     for j in range(8):
                         colorStates.append(currcolor[((i * 8) + j) % 3])
-
+                #Shift out the current colorState
                 shiftOut(colorStates)
 
 
 #UTIL
 
+#Shifts out a boolean array to the shift registers
 def shiftOut(states):
-    for i, state in enumerate(states):
-            GPIO.output(latchpins[i], GPIO.LOW)
-            for high in state:
-                GPIO.output(clockPin, GPIO.LOW)
-                GPIO.output(dataPin, GPIO.HIGH if high else GPIO.LOW)
-                GPIO.output(clockPin, GPIO.HIGH)
-            GPIO.output(latchpins[i], GPIO.HIGH)
+    for i, state in enumerate(states): #Get all the registers
+            GPIO.output(latchpins[i], GPIO.LOW) #Set the register's out pin to low
+            for high in state: #Get the boolean in the current state
+                GPIO.output(clockPin, GPIO.LOW) #Set the clock to low
+                GPIO.output(dataPin, GPIO.HIGH if high else GPIO.LOW) #Set the data pin to high/low based on the boolean value
+                GPIO.output(clockPin, GPIO.HIGH) #Clock it
+            GPIO.output(latchpins[i], GPIO.HIGH) #Latch it
 
+#Checks if 2 arrays have the same elements
 def matchingArrays(A1, A2):
     for i, thing in enumerate(A1):
         if A2[i] != thing:
             return True
     return False
 
+#Clones the current gameState
 def cloneBoard():
     newboard = []
     for i, thing in enumerate(gameState):
@@ -351,5 +389,17 @@ def cloneBoard():
             newboard[i].append(otherthing)
     return newboard
 
+#Checks if an array has all the same elements
+def matchingRows(list):
+    if(list is None or len(list) == 0):
+        return False
+    firstElem = list[0]
+    for thing in list:
+        if thing != firstElem:
+            return False
+    return True
+
+
+#STARTUP
 setup()
 startGame()
