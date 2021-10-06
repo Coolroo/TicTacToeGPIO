@@ -123,7 +123,6 @@ def startGame():
 
 def checkForWin():
     #Check Rows
-    hasWon = False
     for row in gameState:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
@@ -144,7 +143,7 @@ def checkForWin():
     for i in range(3):
             diag[0].append(gameState[i][i])
             diag[1].append(gameState[i][2-i])
-    for row in cols:
+    for row in diag:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
             return
