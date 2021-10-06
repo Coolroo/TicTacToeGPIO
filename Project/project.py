@@ -132,7 +132,7 @@ def checkForWin():
     cols = [[], [], []]
     for i, row in enumerate(gameState):
         for j, col in enumerate(row):
-            cols[j][i] = col
+            cols[j].append(col)
     for row in cols:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
@@ -141,8 +141,8 @@ def checkForWin():
     #Check Diagonals
     diag = [[], []]
     for i in range(3):
-            diag[0][i] = gameState[i][i]
-            diag[1][i] = gameState[i][2-i]
+            diag[0].append(gameState[i][i])
+            diag[1].append(gameState[i][2-i])
     for row in cols:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
