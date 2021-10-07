@@ -99,7 +99,7 @@ def resetGameState():
         for i in range(8):
             state[i] = False
 
-    for i in range(0,8):
+    for i in range(8):
         GPIO.output(clockPin, GPIO.LOW)
         GPIO.output(clockPin, GPIO.HIGH)
     GPIO.output(clockPin, GPIO.LOW)
@@ -129,7 +129,15 @@ def checkForWin():
     for row in gameState:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
-            return
+            return True
+
+def checkForFail():
+    for row in gameState:
+        for thing in row:
+            if thing == BLANK_NUM:
+                return
+    fail()
+
 
     #Check Columns
     cols = [[], [], []]
@@ -139,7 +147,7 @@ def checkForWin():
     for row in cols:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
-            return
+            return True
 
     #Check Diagonals
     diag = [[], []]
@@ -149,12 +157,19 @@ def checkForWin():
     for row in diag:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
+            return True
+    return False
 
 #Win as a given player
 def won(playerNum):
     global gameInProgress
     print("Player " + str(playerNum) + " won!")
     gameInProgress = False
+
+def fail():
+    global gameInProgress
+    gameInProgress = False
+    return
         
 
 #Gameplay
@@ -180,7 +195,8 @@ def makeMove():
     if gameState[markerPos[0]][markerPos[1]] == BLANK_NUM:
         gameState[markerPos[0]][markerPos[1]] = PLAYER1_NUM if turnState else PLAYER2_NUM
         turnState = not turnState
-        checkForWin()
+        if not checkForWin():
+            checkForFail()
     else:
         print("Cannot move here as player " + str(gameState[markerPos[0]][markerPos[1]]) + " already has this space marked")
 
