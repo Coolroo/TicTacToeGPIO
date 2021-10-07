@@ -1,4 +1,5 @@
 import math
+import time
 from lirc import RawConnection
 import RPi.GPIO as GPIO
 
@@ -10,6 +11,16 @@ PLAYER2_NUM = 2
 
 #DEBUG
 CONSOLE_DEBUG = True
+
+#Board Presets
+BOARD_RING = [["1", "1", "1"], ["1", "0", "1"], ["1", "1", "1"]]
+BOARD_DOT = [["0", "0", "0"], ["0", "1", "0"], ["0", "0", "0"]]
+BOARD_X = [["1", "0", "1"], ["0", "1", "0"], ["1", "0", "1"]]
+BOARD_INVERSE_X = [["0", "1", "0"], ["1", "0", "1"], ["0", "1", "0"]]
+BOARD_PLUS = [["0", "1", "0"], ["1", "1", "1"], ["0", "1", "0"]]
+BOARD_CORNERS = [["1", "0", "1"], ["0", "0", "0"], ["1", "0", "1"]]
+
+BOARD_EMPTY = [["0", "0", "0"], ["0", "0", "0"], ["0", "0", "0"]]
 
 #INT Array Variables
 gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
@@ -132,10 +143,25 @@ def checkForWin():
             return True
 
 def checkForFail():
-    for row in gameState:
-        for thing in row:
-            if thing == BLANK_NUM:
-                return
+    cols = [[], [], []]
+    diag = [[], []]
+    for i, row in enumerate(gameState):
+        if(not isRowBlocked(row)):
+            return
+        for j, thing in enumerate(row):
+            cols[j][i] = thing
+
+    for col in cols:
+        if(not isRowBlocked(col)):
+            return
+
+    for i in range(3):
+        diag[0][i] = gameState[i][i]
+        diag[1][i] = gameState[i][2 - i]
+    for d in diag:
+        if(not isRowBlocked(col)):
+            return
+
     fail()
 
 
@@ -164,12 +190,35 @@ def checkForFail():
 def won(playerNum):
     global gameInProgress
     print("Player " + str(playerNum) + " won!")
+    shiftOut(buildColorStates(BOARD_RING, {"1" : playerColors[0 if playerNum == PLAYER1_NUM else 1]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_DOT, {"1" : playerColors[0 if playerNum == PLAYER1_NUM else 1]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_X, {"1" : playerColors[0 if playerNum == PLAYER1_NUM else 1]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_INVERSE_X, {"1" : playerColors[0 if playerNum == PLAYER1_NUM else 1]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_PLUS, {"1" : playerColors[0 if playerNum == PLAYER1_NUM else 1]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_CORNERS, {"1" : playerColors[0 if playerNum == PLAYER1_NUM else 1]}))
+    time.sleep(1)
     gameInProgress = False
 
 def fail():
     global gameInProgress
+    shiftOut(buildColorStates(BOARD_X, {"1" : [True, False, False]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_EMPTY, {}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_X, {"1" : [True, False, False]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_EMPTY, {}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_X, {"1" : [True, False, False]}))
+    time.sleep(1)
+    shiftOut(buildColorStates(BOARD_EMPTY, {}))
+    time.sleep(1)
     gameInProgress = False
-    return
         
 
 #Gameplay
@@ -229,6 +278,11 @@ def refreshDisplay(showMarker = True):
     if CONSOLE_DEBUG:
         print("The game state is " + str(board))
     #Generate ShiftStates
+    buildShiftStates(board)
+    #Apply Shift States
+    shiftOut(shiftStates)
+    
+def buildShiftStates(board):
     for i, row in enumerate(board): #Get all the rows of the board
         for j, position in enumerate(row):  #Get all items in the row
             association = LEDAssociation[(i * 3) + j] #Get the association of the current position
@@ -241,9 +295,23 @@ def refreshDisplay(showMarker = True):
             else: #Else turn the LED off
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = False
-    #Apply Shift States
-    shiftOut(shiftStates)
-    
+
+def buildColorStates(board, keys):
+    state = []
+    for row in shiftStates:
+        state.append([])
+    for i, row in enumerate(board):
+        for j, position in enumerate(row):
+            association = LEDAssociation[(i * 3) + j]
+            if position not in keys:
+                for k in range(3):
+                    state[i].append(False)
+            else:
+                for k in range(3):
+                    state[i].append(keys[position][k])
+    return state
+
+                    
 #INPUTS
 def processInput():
     try:
@@ -251,7 +319,7 @@ def processInput():
         keypress = connection.readline(.0001)
     except KeyboardInterrupt:
         #We have to rethrow this exception so this doesn't consume it
-        raise KeyboardInterrupt
+        raise KeyboardInterrupt 
     except:
         #If we run into any other errors, just make keypress nothing
         keypress=""
@@ -414,6 +482,9 @@ def matchingRows(list):
         if thing != firstElem:
             return False
     return True
+
+def isRowBlocked(row):
+    return PLAYER1_NUM in row and PLAYER2_NUM in row
 
 
 #STARTUP
