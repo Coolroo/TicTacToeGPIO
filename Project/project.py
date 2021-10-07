@@ -107,9 +107,8 @@ def resetGameState():
     gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
     GPIO.output(dataPin, GPIO.LOW)
 
-    for state in shiftStates:
-        for i in range(8):
-            state[i] = False
+    for i, state in enumerate(shiftStates):
+        shiftStates[i] = [False, False, False, False, False, False, False, False]
 
     for i in range(8):
         GPIO.output(clockPin, GPIO.LOW)
@@ -119,6 +118,7 @@ def resetGameState():
     for pin in latchpins:
         GPIO.output(pin, GPIO.LOW)
         GPIO.output(pin, GPIO.HIGH)
+        GPIO.output(pin, GPIO.LOW)
 	
 #Sets the color of a given player, as long as it is not the marker color and not the other player's color
 def chooseColor(playerID, newColor): 
@@ -147,7 +147,7 @@ def checkForWin():
     cols = [[], [], []]
     for i, row in enumerate(gameState):
         for j, col in enumerate(row):
-            cols[j].append(col)
+            cols[j].append(col)      
     for row in cols:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
@@ -169,22 +169,23 @@ def checkForFail():
     diag = [[], []]
     for i, row in enumerate(gameState):
         if(not isRowBlocked(row)):
-            return
+            return False
         for j, thing in enumerate(row):
             cols[j][i] = thing
 
     for col in cols:
         if(not isRowBlocked(col)):
-            return
+            return False
 
     for i in range(3):
         diag[0][i] = gameState[i][i]
         diag[1][i] = gameState[i][2 - i]
     for d in diag:
         if(not isRowBlocked(col)):
-            return
+            return False
 
     fail()
+    return True
 
 #Win as a given player
 def won(playerNum):
@@ -398,7 +399,7 @@ def processInput():
 #A menu for players to select their color
 def selectColor(playerID):
     colorSelected = False
-    currcolor = playerColors[playerID]
+    currcolor = playerColors[0 if playerID == PLAYER1_NUM else 1]
     shiftOut(buildColorStates(BOARD_FULL, {"1" : currcolor}))
 
     #While the player is selecting their color
