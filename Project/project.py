@@ -21,6 +21,7 @@ BOARD_PLUS = [["0", "1", "0"], ["1", "1", "1"], ["0", "1", "0"]]
 BOARD_CORNERS = [["1", "0", "1"], ["0", "0", "0"], ["1", "0", "1"]]
 
 BOARD_EMPTY = [["0", "0", "0"], ["0", "0", "0"], ["0", "0", "0"]]
+BOARD_FULL = [["1", "1", "1"], ["1", "1", "1"], ["1", "1", "1"]]
 
 #INT Array Variables
 gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
@@ -106,9 +107,8 @@ def resetGameState():
     gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
     GPIO.output(dataPin, GPIO.LOW)
 
-    for state in shiftStates:
-        for i in range(8):
-            state[i] = False
+    for i, state in enumerate(shiftStates):
+        shiftStates[i] = [False, False, False, False, False, False, False, False]
 
     for i in range(8):
         GPIO.output(clockPin, GPIO.LOW)
@@ -118,6 +118,7 @@ def resetGameState():
     for pin in latchpins:
         GPIO.output(pin, GPIO.LOW)
         GPIO.output(pin, GPIO.HIGH)
+        GPIO.output(pin, GPIO.LOW)
 	
 #Sets the color of a given player, as long as it is not the marker color and not the other player's color
 def chooseColor(playerID, newColor): 
@@ -141,35 +142,12 @@ def checkForWin():
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
             return True
-
-def checkForFail():
-    cols = [[], [], []]
-    diag = [[], []]
-    for i, row in enumerate(gameState):
-        if(not isRowBlocked(row)):
-            return
-        for j, thing in enumerate(row):
-            cols[j][i] = thing
-
-    for col in cols:
-        if(not isRowBlocked(col)):
-            return
-
-    for i in range(3):
-        diag[0][i] = gameState[i][i]
-        diag[1][i] = gameState[i][2 - i]
-    for d in diag:
-        if(not isRowBlocked(col)):
-            return
-
-    fail()
-
-
+    
     #Check Columns
     cols = [[], [], []]
     for i, row in enumerate(gameState):
         for j, col in enumerate(row):
-            cols[j].append(col)
+            cols[j].append(col)      
     for row in cols:
         if matchingRows(row) and (row[0] == PLAYER1_NUM or row[0] == PLAYER2_NUM):
             won(row[0])
@@ -185,6 +163,29 @@ def checkForFail():
             won(row[0])
             return True
     return False
+
+def checkForFail():
+    cols = [[], [], []]
+    diag = [[], []]
+    for i, row in enumerate(gameState):
+        if(not isRowBlocked(row)):
+            return False
+        for j, thing in enumerate(row):
+            cols[j][i] = thing
+
+    for col in cols:
+        if(not isRowBlocked(col)):
+            return False
+
+    for i in range(3):
+        diag[0][i] = gameState[i][i]
+        diag[1][i] = gameState[i][2 - i]
+    for d in diag:
+        if(not isRowBlocked(col)):
+            return False
+
+    fail()
+    return True
 
 #Win as a given player
 def won(playerNum):
@@ -244,10 +245,14 @@ def makeMove():
     if gameState[markerPos[0]][markerPos[1]] == BLANK_NUM:
         gameState[markerPos[0]][markerPos[1]] = PLAYER1_NUM if turnState else PLAYER2_NUM
         turnState = not turnState
+        refreshDisplay(False)
+        time.sleep(5)
         if not checkForWin():
             checkForFail()
+        return True
     else:
         print("Cannot move here as player " + str(gameState[markerPos[0]][markerPos[1]]) + " already has this space marked")
+        return False
 
 
 #Interaction
@@ -274,7 +279,7 @@ def refreshDisplay(showMarker = True):
     #Clone the board so we can modify it based on the marker position
     board = cloneBoard()
     #Add the marker to the board
-    board[markerPos[0]][markerPos[1]] = MARKER_NUM if showMarker else 0
+    board[markerPos[0]][markerPos[1]] = MARKER_NUM if showMarker else board[markerPos[0]][markerPos[1]]
     if CONSOLE_DEBUG:
         print("The game state is " + str(board))
     #Generate ShiftStates
@@ -298,22 +303,23 @@ def buildShiftStates(board):
 
 def buildColorStates(board, keys):
     state = []
-    for row in shiftStates:
-        state.append([])
+    for i, row in enumerate(shiftStates):
+        state.append([False, False, False, False, False, False, False, False])
     for i, row in enumerate(board):
         for j, position in enumerate(row):
             association = LEDAssociation[(i * 3) + j]
-            if position not in keys:
+            if str(position) not in keys:
                 for k in range(3):
-                    state[i].append(False)
+                    state[association[k][0]][association[k][1]] = False
             else:
                 for k in range(3):
-                    state[i].append(keys[position][k])
+                    state[association[k][0]][association[k][1]] = keys[str(position)][k]
     return state
 
                     
 #INPUTS
 def processInput():
+    showMarker = True
     try:
         #Get an input
         keypress = connection.readline(.0001)
@@ -358,8 +364,6 @@ def processInput():
             moveMarkerRelative(1, 0)
         elif command == "KEY_LEFT":
             moveMarkerRelative(-1, 0)
-        elif command == "KEY_OK":
-            makeMove()
         elif command == "KEY_1":
             setMarkerPos(0, 0)
         elif command == "KEY_2":
@@ -378,6 +382,11 @@ def processInput():
             setMarkerPos(2, 1)
         elif command == "KEY_9":
             setMarkerPos(2, 2)
+        else:
+            showMarker = False
+
+        if command == "KEY_OK":
+            showMarker = not makeMove()
         elif command == "KEY_NUMERIC_STAR":
             print("Selecting color for player 1")
             selectColor(1)
@@ -385,16 +394,16 @@ def processInput():
             print("Selecting color for player 2")
             selectColor(2)
         #Refresh the display after an input
-        refreshDisplay()
+        refreshDisplay(showMarker)
 
 #A menu for players to select their color
 def selectColor(playerID):
     colorSelected = False
-    currcolor = playerColors[playerID]
-        
+    currcolor = playerColors[0 if playerID == PLAYER1_NUM else 1]
+    shiftOut(buildColorStates(BOARD_FULL, {"1" : currcolor}))
+
     #While the player is selecting their color
     while not colorSelected:
-        changeColors = True
         #This acts the same as ProcessInput()
         try:
             keypress = connection.readline(.0001)
@@ -425,24 +434,13 @@ def selectColor(playerID):
                 currcolor = [True, False, True]
             elif command == "KEY_8":
                 currcolor = [True, True, True]
-            else:
-                changeColors = False
-            
-            #If we are selecting the current color
-            if command == "KEY_OK":
+            elif command == "KEY_OK":
                 print("Changing player " + str(playerID) + "'s Color to " + str(currcolor))
                 chooseColor(playerID, currcolor)
                 colorSelected = True
-            
-            #Shift out the color changes as the entire board for easily viewing the selected color
-            if changeColors and not (matchingArrays(playerColors[0 if playerID == PLAYER1_NUM else 1], currcolor) or matchingArrays(currcolor, markerColor)):
-                colorStates = []
-                for i, state in enumerate(shiftStates):
-                    colorStates.append([])
-                    for j in range(8):
-                        colorStates.append(currcolor[((i * 8) + j) % 3])
-                #Shift out the current colorState
-                shiftOut(colorStates)
+                continue
+            #Display the whole board as this color
+            shiftOut(buildColorStates(BOARD_FULL, {"1" : currcolor}))
 
 
 #UTIL
