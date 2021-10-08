@@ -246,7 +246,6 @@ def makeMove():
         gameState[markerPos[0]][markerPos[1]] = PLAYER1_NUM if turnState else PLAYER2_NUM
         turnState = not turnState
         refreshDisplay(False)
-        time.sleep(5)
         if not checkForWin():
             checkForFail()
         return True
