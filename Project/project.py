@@ -24,7 +24,7 @@ BOARD_EMPTY = [["0", "0", "0"], ["0", "0", "0"], ["0", "0", "0"]]
 
 #INT Array Variables
 gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
-latchpins = [13, 19, 21, 23]
+latchpins = [15, 19, 21, 23]
 markerPos = [1, 1]
 LEDAssociation = [
                     [ #LED 1
@@ -70,7 +70,7 @@ shiftStates = [
 
 #INT Variables
 dataPin = 11
-clockPin = 15
+clockPin = 13
 
 #Boolean Variables
 gameInProgress = False
