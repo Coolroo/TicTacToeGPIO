@@ -171,15 +171,15 @@ def checkForFail():
         if(not isRowBlocked(row)):
             return False
         for j, thing in enumerate(row):
-            cols[j][i] = thing
+            cols[j].append(thing)
 
     for col in cols:
         if(not isRowBlocked(col)):
             return False
 
     for i in range(3):
-        diag[0][i] = gameState[i][i]
-        diag[1][i] = gameState[i][2 - i]
+        diag[0].append(gameState[i][i])
+        diag[1].append(gameState[i][2 - i])
     for d in diag:
         if(not isRowBlocked(col)):
             return False
