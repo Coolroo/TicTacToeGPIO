@@ -259,10 +259,10 @@ def makeMove():
 
 #Moves the marker based on its relative position
 def moveMarkerRelative(x, y):
-    markerPos[0] += x
-    markerPos[1] += y
-    markerPos[0] %= 3
+    markerPos[1] += x
+    markerPos[0] += y
     markerPos[1] %= 3
+    markerPos[0] %= 3
 
 #Sets the marker's absolute position
 def setMarkerPos(x = markerPos[0],y = markerPos[1]):
@@ -281,7 +281,10 @@ def refreshDisplay(showMarker = True):
     #Add the marker to the board
     board[markerPos[0]][markerPos[1]] = MARKER_NUM if showMarker else board[markerPos[0]][markerPos[1]]
     if CONSOLE_DEBUG:
-        print("The game state is " + str(board))
+        print("The game state is")
+        print(str(board[0]))
+        print(str(board[1]))
+        print(str(board[2]))
     #Generate ShiftStates
     buildShiftStates(board)
     #Apply Shift States
