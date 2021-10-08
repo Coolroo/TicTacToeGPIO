@@ -449,11 +449,11 @@ def selectColor(playerID):
 def shiftOut(states):
     for i, state in enumerate(states): #Get all the registers
             GPIO.output(latchpins[i], GPIO.LOW) #Set the register's out pin to low
-            for i in range(8): #Get the boolean in the current state
+            for j in range(8): #Get the boolean in the current state
                 GPIO.output(clockPin, GPIO.LOW) #Set the clock to low
-                GPIO.output(dataPin, GPIO.HIGH if not len(state) <= 7-i and state[7-i] else GPIO.LOW) #Set the data pin to high/low based on the boolean value
+                GPIO.output(dataPin, GPIO.HIGH if not len(state) <= 7-j and state[7-j] else GPIO.LOW) #Set the data pin to high/low based on the boolean value
                 GPIO.output(clockPin, GPIO.HIGH) #Clock it
-            GPIO.output(latchpins[i], GPIO.HIGH) #Latch it
+            GPIO.output(latchpins[j], GPIO.HIGH) #Latch it
 
 #Checks if 2 arrays have the same elements
 def matchingArrays(A1, A2):
