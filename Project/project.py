@@ -453,7 +453,7 @@ def shiftOut(states):
                 GPIO.output(clockPin, GPIO.LOW) #Set the clock to low
                 GPIO.output(dataPin, GPIO.HIGH if not len(state) <= 7-j and state[7-j] else GPIO.LOW) #Set the data pin to high/low based on the boolean value
                 GPIO.output(clockPin, GPIO.HIGH) #Clock it
-            GPIO.output(latchpins[j], GPIO.HIGH) #Latch it
+            GPIO.output(latchpins[i], GPIO.HIGH) #Latch it
 
 #Checks if 2 arrays have the same elements
 def matchingArrays(A1, A2):
