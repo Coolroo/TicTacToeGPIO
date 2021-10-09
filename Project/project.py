@@ -366,10 +366,8 @@ Parameters
 ----------
 x : int
     The number of squares to move the marker horizontally.
-x must be a positive integer.
 y : int
     The number of squares to move the marker vertically.
-y must be a positive integer.
 
 Returns
 -------
