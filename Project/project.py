@@ -64,12 +64,7 @@ LEDAssociation = [
 #Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
 playerColors = [[True,False,False],[False,False,True]]
 markerColor = [True, True, False]
-shiftStates = [
-    [False, False, False, False, False, False, False, False], 
-    [False, False, False, False, False, False, False, False], 
-    [False, False, False, False, False, False, False, False], 
-    [False, False, False, False, False, False, False, False]
-]
+
 
 #INT Variables
 dataPin = 11
@@ -134,9 +129,6 @@ def resetGameState():
     gameInProgress = False
     gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
     GPIO.output(dataPin, GPIO.LOW)
-
-    for i, state in enumerate(shiftStates):
-        shiftStates[i] = [False, False, False, False, False, False, False, False]
 
     for i in range(8):
         GPIO.output(clockPin, GPIO.LOW)
@@ -428,7 +420,7 @@ def refreshDisplay(showMarker = True):
         print(str(board[1]))
         print(str(board[2]))
     #Generate ShiftStates
-    buildShiftStates(board)
+    shiftStates = buildShiftStates(board)
     if CONSOLE_DEBUG:
         print("The shift states are:")
         for thing in shiftStates:
@@ -446,6 +438,9 @@ def refreshDisplay(showMarker = True):
         shiftStates (list): The shift states for the board.
 """
 def buildShiftStates(board):
+    shiftStates = []
+    for i in range(4):
+        shiftStates.append([False, False, False, False, False, False, False, False])
     for i, row in enumerate(board): #Get all the rows of the board
         for j, position in enumerate(row):  #Get all items in the row
             association = LEDAssociation[(i * 3) + j] #Get the association of the current position
@@ -458,6 +453,7 @@ def buildShiftStates(board):
             else: #Else turn the LED off
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = False
+    return shiftStates
 
 """
 Builds a list of lists of boolean values representing the current state of the LEDs.
@@ -471,7 +467,7 @@ Returns:
 """
 def buildColorStates(board, keys):
     state = []
-    for i, row in enumerate(shiftStates):
+    for i in range(4):
         state.append([False, False, False, False, False, False, False, False])
     for i, row in enumerate(board):
         for j, position in enumerate(row):
@@ -645,16 +641,11 @@ def shiftOut(states):
     clearRegisters()
     for i, state in enumerate(states): #Get all the registers
             GPIO.output(latchpins[i], GPIO.LOW) #Set the register's out pin to low
-            time.sleep(CLOCK_TICK)
             for j in range(8): #Get the boolean in the current state
                 GPIO.output(clockPin, GPIO.LOW) #Set the clock to low
-                time.sleep(CLOCK_TICK)
                 GPIO.output(dataPin, GPIO.HIGH if not len(state) <= 7-j and state[7-j] else GPIO.LOW) #Set the data pin to high/low based on the boolean value
-                time.sleep(CLOCK_TICK)
                 GPIO.output(clockPin, GPIO.HIGH) #Clock it
-                time.sleep(CLOCK_TICK)
             GPIO.output(latchpins[i], GPIO.HIGH) #Latch it
-            time.sleep(CLOCK_TICK)
 
 
 """
