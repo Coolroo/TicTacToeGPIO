@@ -490,7 +490,6 @@ Returns:
     None
 """
 def processInput():
-    showMarker = True
     try:
         #Get an input
         keypress = connection.readline(.0001)
@@ -509,7 +508,7 @@ def processInput():
 
         if(repeats != "00"): #If the button is being held, just ignore it
             return
-
+        showMarker = True
         ''' KEY_UP                   0x629D
           KEY_DOWN                 0xA857
           KEY_LEFT                 0x22DD
@@ -565,7 +564,7 @@ def processInput():
             print("Selecting color for player 2")
             selectColor(2)
         #Refresh the display after an input
-        refreshDisplay(showMarker)
+        refreshDisplay()
 
 """
     This function allows a player to select a color. 
