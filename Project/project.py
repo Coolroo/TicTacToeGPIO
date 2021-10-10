@@ -9,6 +9,8 @@ MARKER_NUM = -1
 PLAYER1_NUM = 1
 PLAYER2_NUM = 2
 
+CLOCK_TICK = 0.000001
+
 #DEBUG
 CONSOLE_DEBUG = True
 
@@ -638,16 +640,16 @@ def shiftOut(states):
     clearRegisters()
     for i, state in enumerate(states): #Get all the registers
             GPIO.output(latchpins[i], GPIO.LOW) #Set the register's out pin to low
-            time.sleep(0.00001)
+            time.sleep(CLOCK_TICK)
             for j in range(8): #Get the boolean in the current state
                 GPIO.output(clockPin, GPIO.LOW) #Set the clock to low
-                time.sleep(0.00001)
+                time.sleep(CLOCK_TICK)
                 GPIO.output(dataPin, GPIO.HIGH if not len(state) <= 7-j and state[7-j] else GPIO.LOW) #Set the data pin to high/low based on the boolean value
-                time.sleep(0.00001)
+                time.sleep(CLOCK_TICK)
                 GPIO.output(clockPin, GPIO.HIGH) #Clock it
-                time.sleep(0.00001)
+                time.sleep(CLOCK_TICK)
             GPIO.output(latchpins[i], GPIO.HIGH) #Latch it
-            time.sleep(0.00001)
+            time.sleep(CLOCK_TICK)
 
 
 """
