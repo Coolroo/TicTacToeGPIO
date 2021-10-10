@@ -63,7 +63,7 @@ LEDAssociation = [
 
 #Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
 playerColors = [[True,False,False],[False,False,True]]
-markerColor = [True, True, False]
+markerColor = [True, True, True]
 
 
 #INT Variables
@@ -566,7 +566,7 @@ def processInput():
             print("Selecting color for player 2")
             selectColor(2)
         #Refresh the display after an input
-        refreshDisplay()
+        refreshDisplay(showMarker)
 
 """
     This function allows a player to select a color. 
@@ -639,7 +639,10 @@ Returns:
 """
 def shiftOut(states):
     clearRegisters()
+    time.sleep(0.001)
     for i, state in enumerate(states): #Get all the registers
+            if CONSOLE_DEBUG:
+                print("Processing shift register " + str(i + 1) + " shifting " + str(state) + "out")
             GPIO.output(latchpins[i], GPIO.LOW) #Set the register's out pin to low
             for j in range(8): #Get the boolean in the current state
                 GPIO.output(clockPin, GPIO.LOW) #Set the clock to low
