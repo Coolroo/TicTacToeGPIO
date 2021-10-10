@@ -24,9 +24,14 @@ for bit in data:
 GPIO.output(latchPin, GPIO.HIGH)
 
 input()
+GPIO.output(latchPin, GPIO.LOW)
 for bit in range(8):
     GPIO.output(dataPin, GPIO.LOW)
     GPIO.output(clockPin, GPIO.LOW)
     GPIO.output(clockPin, GPIO.HIGH)
+    
 GPIO.output(latchPin, GPIO.HIGH)
+GPIO.output(latchPin, GPIO.LOW)
+GPIO.output(clockPin, GPIO.LOW)
+GPIO.output(dataPin, GPIO.LOW)
 GPIO.cleanup()
