@@ -413,8 +413,10 @@ Returns:
 """
 def refreshDisplay(showMarker = True):
     #Clear the board if the game is over
+    print("Refreshing Display")
     if not gameInProgress:
         clearBoard()
+        print("Game not in progress, clearing board")
     #Clone the board so we can modify it based on the marker position
     board = cloneBoard()
     #Add the marker to the board
@@ -427,6 +429,10 @@ def refreshDisplay(showMarker = True):
         print(str(board[2]))
     #Generate ShiftStates
     buildShiftStates(board)
+    if CONSOLE_DEBUG:
+        print("The shift states are:")
+        for thing in shiftStates:
+            print(str(thing))
     #Apply Shift States
     shiftOut(shiftStates)
     
