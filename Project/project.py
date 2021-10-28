@@ -639,17 +639,18 @@ Returns:
 """
 def shiftOut(states):
     clearRegisters()
-    time.sleep(0.001)
     for i, state in enumerate(states): #Get all the registers
             if CONSOLE_DEBUG:
                 print("Processing shift register " + str(i + 1) + " shifting " + str(state) + "out")
             GPIO.output(latchpins[i], GPIO.LOW) #Set the register's out pin to low
             for j in range(8): #Get the boolean in the current state
                 GPIO.output(clockPin, GPIO.LOW) #Set the clock to low
-                GPIO.output(dataPin, GPIO.HIGH if not len(state) <= 7-j and state[7-j] else GPIO.LOW) #Set the data pin to high/low based on the boolean value
+                GPIO.output(dataPin, GPIO.HIGH if not len(state) <= 7-j and not state[7-j] else GPIO.LOW) #Set the data pin to high/low based on the boolean value
                 GPIO.output(clockPin, GPIO.HIGH) #Clock it
+
             GPIO.output(latchpins[i], GPIO.HIGH) #Latch it
             GPIO.output(latchpins[i], GPIO.LOW)
+
     GPIO.output(clockPin, GPIO.LOW)
     GPIO.output(dataPin, GPIO.LOW)
 
@@ -677,21 +678,21 @@ def clearRegisters():
         GPIO.output(pin, GPIO.LOW)
 
 
+
 """
-Returns True if A1 and A2 have different values at any index, False otherwise.
 
-Parameters:
-    A1 (list): A list of integers.
-    A2 (list): A list of integers.
+Determines whether two arrays are identical.
 
-Returns:
-    bool: True if A1 and A2 have different values at any index, False otherwise.
+:param A1: The first array.
+:param A2: The second array.
+:returns: True if the arrays are identical, False otherwise.
+
 """
 def matchingArrays(A1, A2):
     for i, thing in enumerate(A1):
         if A2[i] != thing:
-            return True
-    return False
+            return False
+    return True
 
 """
 Clones the game board.
