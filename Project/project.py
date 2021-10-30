@@ -27,7 +27,7 @@ BOARD_FULL = [["1", "1", "1"], ["1", "1", "1"], ["1", "1", "1"]]
 
 #INT Array Variables
 gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
-latchpins = [15, 19, 21, 23]
+latchpins = [12, 40, 36, 32]
 markerPos = [1, 1]
 LEDAssociation = [
                     [ #LED 1
@@ -63,12 +63,10 @@ LEDAssociation = [
 
 #Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
 playerColors = [[True,False,False],[False,False,True]]
-markerColor = [True, True, True]
-
 
 #INT Variables
-dataPin = 11
-clockPin = 13
+dataPin = 13
+clockPin = 21
 
 #Boolean Variables
 gameInProgress = False
@@ -128,17 +126,9 @@ def resetGameState():
     global gameState
     gameInProgress = False
     gameState = [[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM],[BLANK_NUM,BLANK_NUM,BLANK_NUM]]
-    GPIO.output(dataPin, GPIO.LOW)
+    shiftOut(buildColorStates(BOARD_EMPTY, {}))
 
-    for i in range(8):
-        GPIO.output(clockPin, GPIO.LOW)
-        GPIO.output(clockPin, GPIO.HIGH)
-    GPIO.output(clockPin, GPIO.LOW)
-
-    for pin in latchpins:
-        GPIO.output(pin, GPIO.LOW)
-        GPIO.output(pin, GPIO.HIGH)
-        GPIO.output(pin, GPIO.LOW)
+    
 	
 """
     Changes the color of the player with the given ID to the given color.
@@ -153,7 +143,7 @@ def resetGameState():
 def chooseColor(playerID, newColor): 
     if(not (playerID == PLAYER2_NUM or playerID == PLAYER1_NUM)):
         print("Recieved an invalid player ID: " + str(playerID))
-    elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor) or matchingArrays(newColor, markerColor)): 
+    elif(matchingArrays(playerColors[0 if playerID == 1 else 1], newColor)): 
         print("The other player is already this color, please select another color")
     else:
         playerColors[0 if playerID == PLAYER1_NUM else 1] = newColor
@@ -449,7 +439,7 @@ def buildShiftStates(board):
                     shiftStates[association[k][0]][association[k][1]] = playerColors[0 if position == PLAYER1_NUM else 1][k]
             elif position == MARKER_NUM: #If this is the marker number, set the LED color to the marker color
                 for k in range(3):
-                    shiftStates[association[k][0]][association[k][1]] = markerColor[k]
+                    shiftStates[association[k][0]][association[k][1]] = playerColors[0 if turnState else 1]
             else: #Else turn the LED off
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = False
@@ -609,14 +599,6 @@ def selectColor(playerID):
                 currcolor = [False, True, False]
             elif command == "KEY_3":
                 currcolor = [True, False, False]
-            elif command == "KEY_4":
-                currcolor = [False, True, True]
-            elif command == "KEY_5":
-                currcolor = [True, True, False]
-            elif command == "KEY_6":
-                currcolor = [True, False, True]
-            elif command == "KEY_8":
-                currcolor = [True, True, True]
             elif command == "KEY_OK":
                 print("Changing player " + str(playerID) + "'s Color to " + str(currcolor))
                 chooseColor(playerID, currcolor)
