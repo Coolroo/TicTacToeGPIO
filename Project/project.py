@@ -411,10 +411,10 @@ def refreshDisplay(showMarker = True):
         print(str(board[2]))
     #Generate ShiftStates
     shiftStates = buildShiftStates(board)
-    if CONSOLE_DEBUG:
+    '''if CONSOLE_DEBUG:
         print("The shift states are:")
         for thing in shiftStates:
-            print(str(thing))
+            print(str(thing))'''
     #Apply Shift States
     shiftOut(shiftStates)
     
@@ -428,6 +428,7 @@ def refreshDisplay(showMarker = True):
         shiftStates (list): The shift states for the board.
 """
 def buildShiftStates(board):
+    global turnState
     shiftStates = []
     for i in range(4):
         shiftStates.append([False, False, False, False, False, False, False, False])
@@ -439,7 +440,7 @@ def buildShiftStates(board):
                     shiftStates[association[k][0]][association[k][1]] = playerColors[0 if position == PLAYER1_NUM else 1][k]
             elif position == MARKER_NUM: #If this is the marker number, set the LED color to the marker color
                 for k in range(3):
-                    shiftStates[association[k][0]][association[k][1]] = playerColors[0 if turnState else 1]
+                    shiftStates[association[k][0]][association[k][1]] = playerColors[0 if turnState else 1][k]
             else: #Else turn the LED off
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = False
