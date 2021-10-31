@@ -63,7 +63,7 @@ LEDAssociation = [
 
 #Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
 playerColors = [[True,False,False],[False,False,True]]
-markerColor = [[True, True, False]]
+markerColor = [True, True, False]
 
 #INT Variables
 dataPin = 13
