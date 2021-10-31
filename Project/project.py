@@ -63,6 +63,7 @@ LEDAssociation = [
 
 #Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
 playerColors = [[True,False,False],[False,False,True]]
+markerColor = [[True, True, False]]
 
 #INT Variables
 dataPin = 13
@@ -229,8 +230,8 @@ def checkForFail():
     for i in range(3):
         diag[0].append(gameState[i][i])
         diag[1].append(gameState[i][2 - i])
-    for d in diag:
-        if(not isRowBlocked(col)):
+    for dia in diag:
+        if(not isRowBlocked(dia)):
             return False
 
     fail()
@@ -440,7 +441,7 @@ def buildShiftStates(board):
                     shiftStates[association[k][0]][association[k][1]] = playerColors[0 if position == PLAYER1_NUM else 1][k]
             elif position == MARKER_NUM: #If this is the marker number, set the LED color to the marker color
                 for k in range(3):
-                    shiftStates[association[k][0]][association[k][1]] = playerColors[0 if turnState else 1][k]
+                    shiftStates[association[k][0]][association[k][1]] = markerColor[k]
             else: #Else turn the LED off
                 for k in range(3):
                     shiftStates[association[k][0]][association[k][1]] = False
