@@ -63,7 +63,7 @@ LEDAssociation = [
 
 #Colors are stored as a boolean array with 3 entries corresponding to RED, GREEN, BLUE
 playerColors = [[True,False,False],[False,False,True]]
-markerColor = [True, True, False]
+markerColor = [False, True, False]
 
 #INT Variables
 dataPin = 13
@@ -148,6 +148,8 @@ def chooseColor(playerID, newColor):
         print("The other player is already this color, please select another color")
     else:
         playerColors[0 if playerID == PLAYER1_NUM else 1] = newColor
+        for i in range(3):
+            markerColor[i] = not(playerColors[0][i] or playerColors[1][i])
         print("Successfully changed player " + str(playerID) + "'s color")
 
 """
