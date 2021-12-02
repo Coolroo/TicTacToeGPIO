@@ -278,15 +278,15 @@ Output:
 """
 def fail():
     global gameInProgress
-    shiftOut(buildColorStates(BOARD_X, {"1" : [True, False, False]}))
+    shiftOut(buildColorStates(BOARD_X, {"1" : [False, False, True]}))
     time.sleep(1)
     shiftOut(buildColorStates(BOARD_EMPTY, {}))
     time.sleep(1)
-    shiftOut(buildColorStates(BOARD_X, {"1" : [True, False, False]}))
+    shiftOut(buildColorStates(BOARD_X, {"1" : [False, False, True]}))
     time.sleep(1)
     shiftOut(buildColorStates(BOARD_EMPTY, {}))
     time.sleep(1)
-    shiftOut(buildColorStates(BOARD_X, {"1" : [True, False, False]}))
+    shiftOut(buildColorStates(BOARD_X, {"1" : [False, False, True]}))
     time.sleep(1)
     shiftOut(buildColorStates(BOARD_EMPTY, {}))
     time.sleep(1)
